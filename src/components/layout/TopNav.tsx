@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { to: '/database', label: 'Database' },
   { to: '/items', label: 'Items' },
   { to: '/maps', label: 'Maps' },
+  { to: '/licenses', label: 'Licenses' },
 ];
 
 export function TopNav() {

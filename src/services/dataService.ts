@@ -38,6 +38,7 @@ function normalizeMoveOption(raw: RawPokemonMove, isUpgrade = false): MoveOption
   const name = raw.name || raw.moveId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const style = (raw.style || '').toLowerCase();
   const category = (raw.category || '').toLowerCase();
+  const categories = category ? category.split(/[\s,]+/).filter(Boolean) : [];
   return {
     moveId: raw.moveId,
     name,
@@ -51,6 +52,7 @@ function normalizeMoveOption(raw: RawPokemonMove, isUpgrade = false): MoveOption
     ccType: ccEntry?.ccType,
     cooldown: raw.cooldown || 7,
     isUpgrade,
+    categories,
   };
 }
 

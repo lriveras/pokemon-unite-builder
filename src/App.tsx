@@ -9,6 +9,7 @@ const ComparePage = lazy(() => import('./pages/ComparePage'));
 const DatabasePage = lazy(() => import('./pages/DatabasePage'));
 const ItemsPage = lazy(() => import('./pages/ItemsPage'));
 const MapsPage = lazy(() => import('./pages/MapsPage'));
+const LicensesPage = lazy(() => import('./pages/LicensesPage'));
 
 function LoadingFallback() {
   return (
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: 'database', element: <Suspense fallback={<LoadingFallback />}><DatabasePage /></Suspense> },
       { path: 'items', element: <Suspense fallback={<LoadingFallback />}><ItemsPage /></Suspense> },
       { path: 'maps', element: <Suspense fallback={<LoadingFallback />}><MapsPage /></Suspense> },
+      { path: 'licenses', element: <Suspense fallback={<LoadingFallback />}><LicensesPage /></Suspense> },
     ],
   },
 ]);

@@ -42,6 +42,8 @@ export interface MoveOption {
   ccType?: CCType;
   cooldown: number;
   isUpgrade: boolean;
+  /** Raw pvpoke category keywords (e.g. ['ranged', 'hindrance', 'dash']) */
+  categories: string[];
 }
 
 export interface MoveSlot {
