@@ -5,6 +5,7 @@ import { MEGA_POKEMON_IDS } from '../constants/moveDamageTable';
 import { CC_MOVE_MAP } from '../constants/ccMoveMap';
 import { computeDimensionScores } from '../engine/scoringEngine';
 import { FULL_POKEMON_ROSTER, PVPOKE_IDS } from '../data/pokemonRoster';
+import { MOVE_DESCRIPTIONS } from '../data/moveDescriptions';
 
 // ------ Normalize Pokemon ------
 
@@ -43,7 +44,7 @@ function normalizeMoveOption(raw: RawPokemonMove, isUpgrade = false): MoveOption
   return {
     moveId: raw.moveId,
     name,
-    description: '',
+    description: MOVE_DESCRIPTIONS[raw.moveId] || '',
     damageType: style.includes('special') ? 'sp_atk' : 'atk',
     isBurst: category.includes('burst'),
     isHeal: category.includes('recovery') || name.toLowerCase().includes('heal') || name.toLowerCase().includes('recover'),
@@ -114,10 +115,11 @@ export function normalizePokemon(raw: RawPokemon, statsSource: Pokemon['statsSou
   const slot1 = normalizeMoveSlot(raw.moves?.slot1);
   const slot2 = normalizeMoveSlot(raw.moves?.slot2);
   const uniteRaw = raw.moves?.unite;
+  const uniteMoveId = uniteRaw?.moveId ?? `${pokemonId}_unite`;
   const uniteMove = {
-    moveId: uniteRaw?.moveId ?? `${pokemonId}_unite`,
+    moveId: uniteMoveId,
     name: uniteRaw?.name ?? 'Unite Move',
-    description: '',
+    description: MOVE_DESCRIPTIONS[uniteMoveId] || '',
     isDash: (uniteRaw?.category || '').includes('dash'),
     isAoE: role === 'attacker' || role === 'all-rounder',
   };
