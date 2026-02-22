@@ -73,6 +73,8 @@ export interface DimensionScores {
 export interface Pokemon {
   pokemonId: string;
   dex: number;
+  /** 'pvpoke' = per-level stats from game data; 'estimated' = role-based archetype estimates */
+  statsSource: 'pvpoke' | 'estimated';
   name: string;
   role: PokemonRole;
   damageType: DamageType;

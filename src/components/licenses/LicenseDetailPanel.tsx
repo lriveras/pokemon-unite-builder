@@ -134,12 +134,23 @@ export function LicenseDetailPanel({ pokemon }: Props) {
             <MechanicTag mechanic={pokemon.damageType === 'melee' ? 'melee' : 'ranged'} />
             <MechanicTag mechanic={pokemon.attackStyle === 'special' ? 'special' : 'physical'} />
           </div>
-          <div className="text-xs text-slate-500 capitalize">
-            Difficulty: <span className={
-              pokemon.difficulty === 'novice' ? 'text-green-400' :
-              pokemon.difficulty === 'expert' ? 'text-red-400' : 'text-amber-400'
-            }>{pokemon.difficulty}</span>
-            {pokemon.isMega && <span className="ml-2 text-purple-400">· Mega (2 item slots)</span>}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="text-xs text-slate-500 capitalize">
+              Difficulty: <span className={
+                pokemon.difficulty === 'novice' ? 'text-green-400' :
+                pokemon.difficulty === 'expert' ? 'text-red-400' : 'text-amber-400'
+              }>{pokemon.difficulty}</span>
+              {pokemon.isMega && <span className="ml-2 text-purple-400">· Mega (2 item slots)</span>}
+            </div>
+            {pokemon.statsSource === 'pvpoke' ? (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-green-900/40 text-green-400 border border-green-700/40 font-medium">
+                ✓ Verified stats
+              </span>
+            ) : (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-900/40 text-amber-400 border border-amber-700/40 font-medium">
+                ~ Estimated stats
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -222,7 +233,15 @@ export function LicenseDetailPanel({ pokemon }: Props) {
         {/* ── STATS ────────────────────────────────────────────── */}
         {tab === 'stats' && (
           <>
-            <h3 className="text-sm font-bold text-slate-300">Full Stat Progression (Levels 1–15)</h3>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-sm font-bold text-slate-300">Full Stat Progression (Levels 1–15)</h3>
+              {pokemon.statsSource === 'estimated' && (
+                <div className="text-xs bg-amber-900/30 border border-amber-700/40 text-amber-400 rounded-lg px-3 py-1.5">
+                  Stats are role-based estimates — not from game data.{' '}
+                  <span className="text-amber-500/70">See DATA_SOURCES.md to add verified values from uniteapi.dev.</span>
+                </div>
+              )}
+            </div>
             <StatsTable pokemon={pokemon} />
           </>
         )}

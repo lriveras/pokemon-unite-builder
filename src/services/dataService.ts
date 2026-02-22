@@ -4,6 +4,7 @@ import { DATA_URLS, getSpriteUrl } from '../constants/dataUrls';
 import { MEGA_POKEMON_IDS } from '../constants/moveDamageTable';
 import { CC_MOVE_MAP } from '../constants/ccMoveMap';
 import { computeDimensionScores } from '../engine/scoringEngine';
+import { FULL_POKEMON_ROSTER, PVPOKE_IDS } from '../data/pokemonRoster';
 
 // ------ Normalize Pokemon ------
 
@@ -71,7 +72,7 @@ function normalizeMoveSlot(rawMoves: RawPokemonMove[] | undefined): MoveSlot {
   return { options, defaultChoice: options[0]?.moveId || '' };
 }
 
-export function normalizePokemon(raw: RawPokemon): Pokemon {
+export function normalizePokemon(raw: RawPokemon, statsSource: Pokemon['statsSource'] = 'pvpoke'): Pokemon {
   const pokemonId = raw.pokemonId;
   const isMega = MEGA_POKEMON_IDS.has(pokemonId);
   const role = normalizeRole(raw.role);
@@ -144,6 +145,7 @@ export function normalizePokemon(raw: RawPokemon): Pokemon {
   return {
     pokemonId,
     dex: raw.dex ?? 0,
+    statsSource,
     name,
     role,
     damageType,
@@ -223,9 +225,27 @@ export async function fetchAllGameData(): Promise<{
       fetchJson<RawBattleItem[]>(DATA_URLS.battleItems).catch(() => null),
     ]);
 
-    const pokemon = rawPokemon
-      ? rawPokemon.map(normalizePokemon).filter(p => p.pokemonId && p.dex > 0)
-      : getSamplePokemon();
+    // Build the full roster from static data first (all 86 Pokemon, estimated stats)
+    const staticById = new Map(
+      FULL_POKEMON_ROSTER.map(r => [r.pokemonId, normalizePokemon(r, 'estimated')])
+    );
+
+    // Override with live pvpoke data where available (accurate per-level stats)
+    if (rawPokemon) {
+      rawPokemon
+        .filter(r => r.pokemonId && (r.dex ?? 0) > 0)
+        .forEach(r => staticById.set(r.pokemonId, normalizePokemon(r, 'pvpoke')));
+    }
+
+    // Stamp any pvpoke Pokemon not already in our static list (future new releases)
+    if (rawPokemon) {
+      rawPokemon
+        .filter(r => !PVPOKE_IDS.has(r.pokemonId) && r.pokemonId && (r.dex ?? 0) > 0)
+        .forEach(r => staticById.set(r.pokemonId, normalizePokemon(r, 'pvpoke')));
+    }
+
+    const pokemon = Array.from(staticById.values())
+      .sort((a, b) => a.dex - b.dex || a.name.localeCompare(b.name));
 
     const heldItems = rawHeldItems
       ? rawHeldItems.map(normalizeHeldItem)
@@ -237,8 +257,12 @@ export async function fetchAllGameData(): Promise<{
 
     return { pokemon, heldItems, battleItems };
   } catch {
+    // Full static roster is always available as fallback
+    const pokemon = FULL_POKEMON_ROSTER
+      .map(r => normalizePokemon(r, 'estimated'))
+      .sort((a, b) => a.dex - b.dex || a.name.localeCompare(b.name));
     return {
-      pokemon: getSamplePokemon(),
+      pokemon,
       heldItems: SAMPLE_HELD_ITEMS.map(normalizeHeldItem),
       battleItems: SAMPLE_BATTLE_ITEMS.map(normalizeBattleItem),
     };
