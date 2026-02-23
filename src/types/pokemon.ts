@@ -39,6 +39,8 @@ export interface MoveOption {
   isShield: boolean;
   isDash: boolean;
   isSustain: boolean;
+  /** True if the move hits multiple targets in an area (AoE) */
+  isAoE: boolean;
   ccType?: CCType;
   cooldown: number;
   isUpgrade: boolean;
@@ -57,6 +59,12 @@ export interface UniteMove {
   description: string;
   isDash: boolean;
   isAoE: boolean;
+  /** If the unite move applies CC, its type */
+  ccType?: CCType;
+  /** True if the unite move restores HP */
+  isHeal: boolean;
+  /** True if the unite move grants a shield */
+  isShield: boolean;
 }
 
 export interface DimensionScores {
@@ -66,6 +74,8 @@ export interface DimensionScores {
   mobility: number;
   healing: number;
   shielding: number;
+  teamFight: number;
+  engage: number;
   objectiveThreat: number;
   earlyGame: number;
   lateGame: number;

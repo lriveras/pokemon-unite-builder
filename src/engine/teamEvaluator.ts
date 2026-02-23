@@ -3,7 +3,7 @@ import { TeamEvaluation, SynergyFlag, PowerCurvePoint } from '../types/evaluatio
 import { evaluateSynergies } from './synergyEngine';
 import { DIMENSION_WEIGHTS, SYNERGY_BONUSES, getTierFromScore } from '../constants/evaluation';
 
-const ZERO_DIMENSIONS: DimensionScores = { damageOutput: 0, durability: 0, crowdControl: 0, mobility: 0, healing: 0, shielding: 0, objectiveThreat: 0, earlyGame: 0, lateGame: 0 };
+const ZERO_DIMENSIONS: DimensionScores = { damageOutput: 0, durability: 0, crowdControl: 0, mobility: 0, healing: 0, shielding: 0, teamFight: 0, engage: 0, objectiveThreat: 0, earlyGame: 0, lateGame: 0 };
 const DIMENSION_KEYS = Object.keys(ZERO_DIMENSIONS) as (keyof DimensionScores)[];
 
 function avgDimensions(pokemon: Pokemon[]): DimensionScores {
@@ -24,6 +24,8 @@ function computeCompositeScore(dims: DimensionScores, flags: SynergyFlag[]): num
   score += dims.mobility        * DIMENSION_WEIGHTS.mobility        * 10;
   score += dims.healing         * DIMENSION_WEIGHTS.healing         * 10;
   score += dims.shielding       * DIMENSION_WEIGHTS.shielding       * 10;
+  score += (dims.teamFight ?? 0) * DIMENSION_WEIGHTS.teamFight      * 10;
+  score += (dims.engage    ?? 0) * DIMENSION_WEIGHTS.engage         * 10;
   score += dims.objectiveThreat * DIMENSION_WEIGHTS.objectiveThreat * 10;
   score += dims.earlyGame       * DIMENSION_WEIGHTS.earlyGame       * 10;
   score += dims.lateGame        * DIMENSION_WEIGHTS.lateGame        * 10;
@@ -43,6 +45,8 @@ function generateStrengths(dims: DimensionScores, flags: SynergyFlag[]): string[
   if (dims.mobility >= 7) strengths.push('High mobility enables excellent rotation and pick potential');
   if (dims.healing >= 7) strengths.push('Abundant healing keeps the team healthy through prolonged fights');
   if (dims.shielding >= 7) strengths.push('Strong shielding absorbs burst damage and protects carries');
+  if ((dims.teamFight ?? 0) >= 7) strengths.push('Dominant team fight potential with AoE pressure and coordination');
+  if ((dims.engage ?? 0) >= 7) strengths.push('Strong initiation threat — can start fights on favorable terms');
   if (dims.objectiveThreat >= 7) strengths.push('Strong objective threat secures Zapdos and Dreadnaw consistently');
   if (dims.earlyGame >= 7) strengths.push('Dominates early game, enabling snowball through objectives');
   if (dims.lateGame >= 7) strengths.push('Scales extremely well into the late game and Zapdos fights');
@@ -57,6 +61,8 @@ function generateWeaknesses(dims: DimensionScores, flags: SynergyFlag[]): string
   if (dims.crowdControl < 4) weaknesses.push('Lack of Crowd Control makes it difficult to control team fights');
   if (dims.mobility < 4) weaknesses.push('Low mobility — easily kited and struggles to cover map');
   if (dims.healing < 3 && dims.shielding < 3) weaknesses.push('No healing or shielding — team has no recovery during fights');
+  if ((dims.teamFight ?? 0) < 4) weaknesses.push('Weak team fight potential — struggles in 5v5 Zapdos clashes');
+  if ((dims.engage ?? 0) < 4) weaknesses.push('Low initiation threat — opponents control fight timing');
   if (dims.objectiveThreat < 4) weaknesses.push('Weak objective play — may lose Dreadnaw and Zapdos contests');
   if (dims.earlyGame < 4) weaknesses.push('Slow early game — vulnerable to early objective loss');
   flags.filter(f => f.severity === 'critical').forEach(f => weaknesses.push(f.description.split('.')[0]));
@@ -84,6 +90,12 @@ function generateCoachingTips(dims: DimensionScores, flags: SynergyFlag[], compo
   }
   if (dims.mobility < 4) {
     tips.push('Equip Eject Button or X Speed on key Pokemon to compensate for low mobility');
+  }
+  if ((dims.teamFight ?? 0) < 5) {
+    tips.push('Pick Pokémon with AoE moves or CC to improve 5v5 performance around objectives');
+  }
+  if ((dims.engage ?? 0) < 4) {
+    tips.push('Add a dash+CC initiator (e.g. Tsareena, Blastoise, Talonflame) to gain fight control');
   }
   if (flags.some(f => f.id === 'cc_chain')) {
     tips.push('Coordinate CC rotation: stagger your CC abilities to maintain enemy lock-out');

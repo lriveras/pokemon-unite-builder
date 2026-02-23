@@ -19,13 +19,25 @@ export interface CCMoveEntry {
  */
 export const CC_MOVE_MAP: Record<string, CCMoveEntry> = {
 
+  // ── Pikachu ───────────────────────────────────────────────────────────
+  thunder_shock: { ccType: 'slow',    duration: 1.0, quality: 0.4 }, // paralysis → slow
+  electro_ball:  { ccType: 'slow',    duration: 1.0, quality: 0.4 }, // leaving them paralyzed
+  electro_web:   { ccType: 'root',    duration: 2.0, quality: 0.8 }, // leaving them unable to move
+  volt_switch:   { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // throwing opposing Pokémon
+
   // ── Blastoise ──────────────────────────────────────────────────────────
+  water_gun_blastoise: { ccType: 'slow',    duration: 1.0, quality: 0.5 }, // shoving + speed decrease
   water_spout:  { ccType: 'slow',    duration: 1.5, quality: 0.5 },
   surf:         { ccType: 'slow',    duration: 1.0, quality: 0.5 },
+  surf_blastoise: { ccType: 'stun',  duration: 1.5, quality: 1.0 }, // leaving them unable to act
   rapid_spin:   { ccType: 'slow',    duration: 0.5, quality: 0.4 },
   hydro_pump:   { ccType: 'knockup', duration: 0.5, quality: 0.75 },
   skull_bash:   { ccType: 'stun',    duration: 1.0, quality: 1.0 },
   blizzard:     { ccType: 'freeze',  duration: 1.5, quality: 0.9 },
+
+  // ── Charizard ─────────────────────────────────────────────────────────
+  fire_spin:    { ccType: 'slow',    duration: 1.5, quality: 0.5 }, // decreasing movement speed
+  flare_blitz:  { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // throwing opposing Pokémon
 
   // ── Snorlax ───────────────────────────────────────────────────────────
   block:        { ccType: 'root',    duration: 2.0, quality: 0.8 },
@@ -33,19 +45,25 @@ export const CC_MOVE_MAP: Record<string, CCMoveEntry> = {
   tackle:       { ccType: 'knockup', duration: 0.5, quality: 0.75 },
   flail:        { ccType: 'knockup', duration: 0.75, quality: 0.75 },
   yawn:         { ccType: 'sleep',   duration: 2.0, quality: 0.85 },
+  rest:         { ccType: 'root',    duration: 2.5, quality: 0.6 }, // blocks movement of non-team Pokémon
 
   // ── Slowbro ───────────────────────────────────────────────────────────
-  amnesia:      { ccType: 'slow',     duration: 2.0, quality: 0.5 },
   scald:        { ccType: 'slow',     duration: 1.5, quality: 0.5 },
   telekinesis:  { ccType: 'suppress', duration: 2.5, quality: 0.95 },
-  surf_slowbro: { ccType: 'slow',     duration: 1.0, quality: 0.5 },
+  surf_slowbro: { ccType: 'knockup',  duration: 0.75, quality: 0.75 }, // throwing them (was 'slow' — fixed)
   slowbeam:     { ccType: 'root',     duration: 2.5, quality: 0.8 }, // leaves them unable to move
 
   // ── Wigglytuff ────────────────────────────────────────────────────────
   sing:         { ccType: 'sleep',   duration: 3.0, quality: 0.85 },
   pound:        { ccType: 'stun',    duration: 0.5, quality: 1.0 },
   cute_charm:   { ccType: 'slow',    duration: 1.0, quality: 0.5 },
+  double_slap:  { ccType: 'slow',    duration: 1.0, quality: 0.5 }, // decreasing movement speed
+  rollout:      { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // throws them (also isShield)
   dazzling_gleam: { ccType: 'slow',  duration: 1.5, quality: 0.5 },
+
+  // ── Mr. Mime ──────────────────────────────────────────────────────────
+  barrier:      { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // shoved and left unable to act
+  light_screen: { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // shoved and left unable to act
 
   // ── Machamp ───────────────────────────────────────────────────────────
   submission:    { ccType: 'knockup',  duration: 0.75, quality: 0.75 },

@@ -1,15 +1,17 @@
 import { Tier } from '../types/pokemon';
 
 export const DIMENSION_WEIGHTS = {
-  damageOutput:    0.16,
-  durability:      0.13,
-  crowdControl:    0.13,
-  mobility:        0.09,
-  healing:         0.09,
-  shielding:       0.09,
-  objectiveThreat: 0.11,
-  earlyGame:       0.10,
-  lateGame:        0.10,
+  damageOutput:    0.14,
+  durability:      0.12,
+  crowdControl:    0.11,
+  mobility:        0.08,
+  healing:         0.08,
+  shielding:       0.08,
+  teamFight:       0.08,
+  engage:          0.07,
+  objectiveThreat: 0.09,
+  earlyGame:       0.08,
+  lateGame:        0.07,
 } as const; // total = 1.00
 
 export const SYNERGY_BONUSES = {

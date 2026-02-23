@@ -1,7 +1,7 @@
 /**
  * Pokemon UNITE — Team Composition Dimension Glossary
  *
- * Each entry explains one of the nine scoring dimensions used to evaluate
+ * Each entry explains one of the eleven scoring dimensions used to evaluate
  * a team composition. Scores are 0–10 per Pokemon; the team score is the
  * average across all filled slots, then a composite weighted score is
  * derived and rendered as a 0–100 gauge.
@@ -207,6 +207,71 @@ export const TEAM_COMP_GLOSSARY: Record<keyof DimensionScores, DimensionDefiniti
       'Your team is exposed to burst damage. Add Buddy Barrier held items to '
       + 'grant unite move shields, and position carefully to avoid being one-shotted.',
     color: 'bg-cyan-900/60 text-cyan-300 border-cyan-700/50',
+  },
+
+  teamFight: {
+    id: 'teamFight',
+    label: 'Team Fight',
+    category: 'offense',
+    shortDescription: 'Effectiveness in 5v5 clashes around Zapdos and objectives.',
+    fullDescription:
+      'Measures how well the team performs in the pivotal 5v5 team fights that '
+      + 'determine objective control. AoE moves hit multiple enemies simultaneously, '
+      + 'turning a single action into multi-target pressure. AoE moves that also apply '
+      + 'Crowd Control (e.g., Blastoise\'s Surf, Wigglytuff\'s Sing) are especially '
+      + 'potent — they displace and lock down multiple enemies at once. The single '
+      + 'biggest team-fight factor is the unite move: an AoE unite (e.g., Blastoise '
+      + 'Hydro Typhoon, Venusaur Verdant Anger) can flip an entire fight instantly. '
+      + 'Defenders and Supporters receive a role bonus as frontline anchors.',
+    dataSource:
+      'AoE regular moves × 2.0 '
+      + '+ AoE + CC regular moves × 1.5 '
+      + '+ AoE unite move: +3.5 (+ 1.0 more if also CC) '
+      + '+ Defender/Supporter role: +2.0, All-Rounder: +1.0 '
+      + '+ (pvpoke support + endurance ratings) / 2 × 0.3.',
+    highMeaning:
+      'Your team dominates team fights. Force 5v5 engagements at every objective, '
+      + 'especially Zapdos. Coordinate AoE unite moves to hit multiple enemies and '
+      + 'use AoE CC to prevent enemies from retreating or using their unites.',
+    lowMeaning:
+      'Your team is weak in extended 5v5 fights. Avoid head-to-head clashes and '
+      + 'instead win through split-pushing, objective stealing, or pick strategies. '
+      + 'Add AoE Pokémon (Blastoise, Venusaur, Decidueye) to improve team fight power.',
+    color: 'bg-rose-900/60 text-rose-300 border-rose-700/50',
+  },
+
+  engage: {
+    id: 'engage',
+    label: 'Engage / Pick',
+    category: 'utility',
+    shortDescription: 'Ability to initiate fights and pick off isolated targets.',
+    fullDescription:
+      'Measures how well the team can start fights on its own terms — diving the '
+      + 'enemy backline, locking down high-value targets, or initiating before the '
+      + 'opponent is ready. The gold standard engage tool is a dash move that also '
+      + 'applies Crowd Control (gap-close + immediate lockdown). Hard CC from range '
+      + '(stun, suppress, sleep, freeze, root) is also very effective since it '
+      + 'initiates a fight without needing to close the gap. Unite moves with '
+      + 'dash+CC (e.g., Talonflame, Cramorant) or suppression (e.g., Slowbro) '
+      + 'are the strongest initiation tools in the game. Speedsters excel at '
+      + 'picking off isolated targets; All-Rounders are reliable divers.',
+    dataSource:
+      'Dash + CC moves × 3.5 '
+      + '+ Hard CC (stun/suppress/sleep/freeze/root) without dash × 1.5 '
+      + '+ Dash moves without CC × 0.5 '
+      + '+ Unite move: dash+CC +3.0, suppress/stun +2.5, dash-only +1.0, CC-only +1.0 '
+      + '+ Speedster role: +2.0, All-Rounder: +1.0 '
+      + '+ pvpoke mobility rating × 0.2.',
+    highMeaning:
+      'Your team can dictate fight timing. Look for isolated enemies to pick, '
+      + 'force fights near objectives when advantaged, and use engage tools to '
+      + 'interrupt enemy scoring plays. Coordinate engage with your damage dealers '
+      + 'to burst the target before they can react.',
+    lowMeaning:
+      'Your team cannot reliably start fights. Play reactively — set up in '
+      + 'objective zones and wait for enemies to commit before responding. '
+      + 'Eject Button can serve as an emergency disengage when opponents engage first.',
+    color: 'bg-fuchsia-900/60 text-fuchsia-300 border-fuchsia-700/50',
   },
 
   objectiveThreat: {

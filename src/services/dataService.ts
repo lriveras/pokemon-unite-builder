@@ -38,22 +38,59 @@ function normalizeDifficulty(raw: string | undefined): Difficulty {
   return 'intermediate';
 }
 
+/**
+ * Returns true if a move description indicates it hits multiple targets in an area.
+ * Detects AoE from pvpoke category field OR from description keywords.
+ */
+function detectIsAoE(category: string, desc: string): boolean {
+  if (category.includes('area')) return true;
+  const d = desc.toLowerCase();
+  return (
+    d.includes('area of effect') ||
+    d.includes('in the area') ||
+    d.includes('nearby opposing pokémon') ||
+    d.includes('all opposing pokémon') ||
+    d.includes('wide area') ||
+    d.includes('surrounding area') ||
+    d.includes('opposing pokémon in the area')
+  );
+}
+
+/**
+ * Returns true if a move description indicates burst / spike damage.
+ * Burst = all damage dealt very quickly or in one hit for kill potential.
+ */
+function detectIsBurst(category: string, desc: string): boolean {
+  if (category.includes('burst')) return true;
+  const d = desc.toLowerCase();
+  return (
+    d.includes('massive damage') ||
+    d.includes('powerful beam') ||
+    d.includes('especially large amount of damage') ||
+    d.includes('greatly increased damage') ||
+    d.includes('tremendous') ||
+    d.includes('blinding speed')
+  );
+}
+
 function normalizeMoveOption(raw: RawPokemonMove, isUpgrade = false): MoveOption {
   const ccEntry = CC_MOVE_MAP[raw.moveId];
   const name = raw.name || raw.moveId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const style = (raw.style || '').toLowerCase();
   const category = (raw.category || '').toLowerCase();
   const categories = category ? category.split(/[\s,]+/).filter(Boolean) : [];
+  const desc = MOVE_DESCRIPTIONS[raw.moveId] || '';
   return {
     moveId: raw.moveId,
     name,
-    description: MOVE_DESCRIPTIONS[raw.moveId] || '',
+    description: desc,
     damageType: style.includes('special') ? 'sp_atk' : 'atk',
-    isBurst: category.includes('burst'),
+    isBurst: detectIsBurst(category, desc),
     isHeal: category.includes('recovery') || name.toLowerCase().includes('heal') || name.toLowerCase().includes('recover') || HEAL_MOVE_IDS.has(raw.moveId),
     isShield: category.includes('shield') || name.toLowerCase().includes('shield') || SHIELD_MOVE_IDS.has(raw.moveId),
     isDash: category.includes('dash') || name.toLowerCase().includes('dash') || name.toLowerCase().includes('rush') || DASH_MOVE_IDS.has(raw.moveId),
     isSustain: category.includes('drain') || category.includes('sustain'),
+    isAoE: detectIsAoE(category, desc),
     ccType: ccEntry?.ccType,
     cooldown: raw.cooldown || 7,
     isUpgrade,
@@ -125,12 +162,18 @@ export function normalizePokemon(raw: RawPokemon, statsSource: Pokemon['statsSou
   const slot2 = normalizeMoveSlot(raw.moves?.slot2);
   const uniteRaw = raw.moves?.unite;
   const uniteMoveId = uniteRaw?.moveId ?? `${pokemonId}_unite`;
+  const uniteDesc = MOVE_DESCRIPTIONS[uniteMoveId] || '';
+  const uniteDescLow = uniteDesc.toLowerCase();
+  const uniteCCEntry = CC_MOVE_MAP[uniteMoveId];
   const uniteMove = {
     moveId: uniteMoveId,
     name: uniteRaw?.name ?? 'Unite Move',
-    description: MOVE_DESCRIPTIONS[uniteMoveId] || '',
-    isDash: (uniteRaw?.category || '').includes('dash'),
-    isAoE: role === 'attacker' || role === 'all-rounder',
+    description: uniteDesc,
+    isDash: (uniteRaw?.category || '').includes('dash') || DASH_MOVE_IDS.has(uniteMoveId) || uniteDescLow.includes('dash') || uniteDescLow.includes('charge forward') || uniteDescLow.includes('dives'),
+    isAoE: detectIsAoE(uniteRaw?.category || '', uniteDesc),
+    ccType: uniteCCEntry?.ccType,
+    isHeal: HEAL_MOVE_IDS.has(uniteMoveId) || uniteDescLow.includes('recovers hp') || uniteDescLow.includes('restores') && uniteDescLow.includes('hp') || uniteDescLow.includes('heal'),
+    isShield: SHIELD_MOVE_IDS.has(uniteMoveId) || uniteDescLow.includes('grants') && uniteDescLow.includes('shield') || uniteDescLow.includes('a shield'),
   };
 
   const basicRaw = raw.moves?.basic;

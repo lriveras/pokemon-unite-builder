@@ -17,6 +17,8 @@ const DIMENSION_LABELS = [
   { key: 'mobility',        label: 'Mobility' },
   { key: 'healing',         label: 'Healing' },
   { key: 'shielding',       label: 'Shielding' },
+  { key: 'teamFight',       label: 'Team Fight' },
+  { key: 'engage',          label: 'Engage' },
   { key: 'objectiveThreat', label: 'Objective' },
 ] as const;
 

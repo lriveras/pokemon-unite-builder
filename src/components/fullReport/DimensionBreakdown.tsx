@@ -10,6 +10,8 @@ const LABELS: Record<keyof DimensionScores, string> = {
   mobility:        'Mobility',
   healing:         'Healing',
   shielding:       'Shielding',
+  teamFight:       'Team Fight',
+  engage:          'Engage / Pick',
   objectiveThreat: 'Objective Threat',
   earlyGame:       'Early Game',
   lateGame:        'Late Game',

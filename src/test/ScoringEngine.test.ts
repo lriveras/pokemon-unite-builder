@@ -8,7 +8,7 @@ const BASE_STATS = Array.from({ length: 15 }, (_, i) => ({
 
 const BASE_RATINGS = { offense: 3, endurance: 3, mobility: 3, scoring: 3, support: 3, leveling: 3 };
 
-function makeMove(overrides: Partial<{ moveId: string; name: string; isHeal: boolean; isShield: boolean; isDash: boolean; isBurst: boolean; isSustain: boolean; ccType: string | undefined; categories: string[] }>) {
+function makeMove(overrides: Partial<{ moveId: string; name: string; isHeal: boolean; isShield: boolean; isDash: boolean; isBurst: boolean; isSustain: boolean; isAoE: boolean; ccType: string | undefined; categories: string[] }>) {
   return {
     moveId: overrides.moveId ?? 'test_move',
     name: overrides.name ?? 'Test Move',
@@ -19,6 +19,7 @@ function makeMove(overrides: Partial<{ moveId: string; name: string; isHeal: boo
     isShield: overrides.isShield ?? false,
     isDash: overrides.isDash ?? false,
     isSustain: overrides.isSustain ?? false,
+    isAoE: overrides.isAoE ?? false,
     ccType: overrides.ccType as any,
     cooldown: 7,
     isUpgrade: false,
@@ -35,7 +36,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'physical',
         slot1: { options: [makeMove({ isHeal: true })], defaultChoice: '' },
         slot2: { options: [], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       const withoutHeal = computeDimensionScores({
@@ -44,7 +45,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'physical',
         slot1: { options: [makeMove({})], defaultChoice: '' },
         slot2: { options: [], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       // A Pokemon with a heal move must score higher on healing than one without
@@ -58,7 +59,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'special',
         slot1: { options: [], defaultChoice: '' },
         slot2: { options: [], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       const attacker = computeDimensionScores({
@@ -67,7 +68,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'special',
         slot1: { options: [], defaultChoice: '' },
         slot2: { options: [], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       expect(supporter.healing).toBeGreaterThan(attacker.healing);
@@ -80,7 +81,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'physical',
         slot1: { options: [makeMove({ moveId: 'h1', isHeal: true })], defaultChoice: '' },
         slot2: { options: [], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       const twoHeals = computeDimensionScores({
@@ -89,7 +90,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'physical',
         slot1: { options: [makeMove({ moveId: 'h1', isHeal: true })], defaultChoice: '' },
         slot2: { options: [makeMove({ moveId: 'h2', isHeal: true })], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       expect(twoHeals.healing).toBeGreaterThan(oneHeal.healing);
@@ -126,7 +127,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'physical',
         slot1: { options: [makeMove({ isShield: true })], defaultChoice: '' },
         slot2: { options: [], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       const withoutShield = computeDimensionScores({
@@ -135,7 +136,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'physical',
         slot1: { options: [makeMove({})], defaultChoice: '' },
         slot2: { options: [], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: false, isAoE: false, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       expect(withShield.shielding).toBeGreaterThan(withoutShield.shielding);
@@ -150,7 +151,7 @@ describe('Scoring Engine', () => {
         attackStyle: 'special',
         slot1: { options: [makeMove({ isHeal: true }), makeMove({ moveId: 'h2', isHeal: true })], defaultChoice: '' },
         slot2: { options: [makeMove({ moveId: 's1', isShield: true }), makeMove({ moveId: 'd1', isDash: true })], defaultChoice: '' },
-        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: true, isAoE: true },
+        uniteMove: { moveId: 'u', name: 'U', description: '', isDash: true, isAoE: true, isHeal: false, isShield: false },
         normalizedStats: BASE_STATS,
       });
       for (const [key, value] of Object.entries(scores)) {

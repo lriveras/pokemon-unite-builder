@@ -54,122 +54,158 @@ export function computeDimensionScores(input: ScoringInput): DimensionScores {
   // ── Damage Output (0-10) ────────────────────────────────────────────────
   // Primary: offense rating (captures move quality + actual role in game)
   // Secondary: actual offensive stat at max level vs. absolute max across all roles
-  // This ensures attackers/speedsters score high and supports/defenders score lower.
   const offStat =
     attackStyle === 'special'  ? maxStats.sp_atk :
     attackStyle === 'physical' ? maxStats.atk :
-    Math.max(maxStats.atk, maxStats.sp_atk); // mixed
+    Math.max(maxStats.atk, maxStats.sp_atk);
 
-  // Absolute reference: top offensive stat across all Pokemon archetypes (~750)
   const ABS_OFF_REF = 750;
   const statScore = Math.min(10, (offStat / ABS_OFF_REF) * 10);
   const ratingScore = (ratings.offense / 5) * 10;
-  // Blend 40% stat, 60% rating — rating encodes move quality & burst which raw stat misses
   let damageOutput = statScore * 0.4 + ratingScore * 0.6;
+  // Burst moves (spike damage, one-shot potential)
   const burstMoves = allMoves.filter(m => m.isBurst);
-  if (burstMoves.length > 0) damageOutput += 0.5;
-  const hasAoEMove = allMoves.some(
-    m => m.name.toLowerCase().includes('bomb') ||
-         m.name.toLowerCase().includes('blast') ||
-         m.name.toLowerCase().includes('quake') ||
-         m.categories.includes('area')
-  );
-  if (hasAoEMove) damageOutput += 0.3;
+  damageOutput += burstMoves.length * 0.75;
+  // AoE move bonus — spreading damage across multiple targets
+  const aoeMovesForDmg = allMoves.filter(m => m.isAoE);
+  damageOutput += aoeMovesForDmg.length * 0.4;
+  // Unite move AoE bonus
+  if (uniteMove.isAoE) damageOutput += 0.3;
   damageOutput = clamp(damageOutput);
 
   // ── Durability (0-10) ───────────────────────────────────────────────────
-  // Uses Effective HP (EHP) derived from actual HP, Def, and Sp. Def stats.
-  // Formula mirrors the game's damage reduction: damage ∝ 1 / (1 + def/400)
-  // so EHP_physical = HP × (400 + Def) / 400 — higher Def = more effective HP.
-  // Normalized absolutely (not role-relative) so full teams of squishies score low.
   const ehpPhysical = maxStats.hp * (400 + maxStats.def) / 400;
   const ehpSpecial  = maxStats.hp * (400 + maxStats.sp_def) / 400;
   const avgEHP = (ehpPhysical + ehpSpecial) / 2;
-  // Reference: top defender archetype EHP at L15 ≈ 31 000
   const MAX_EHP_REF = 31000;
   const ehpScore = Math.min(10, (avgEHP / MAX_EHP_REF) * 10);
   const enduranceScore = (ratings.endurance / 5) * 10;
-  // 60% EHP stat, 40% endurance rating
   let durability = ehpScore * 0.6 + enduranceScore * 0.4;
-  const hasSelfSustainMove = allMoves.some(m => m.isSustain || m.isHeal);
-  if (hasSelfSustainMove) durability += 0.5; // self-heal boosts staying power
+  // Self-heal or shield moves increase effective staying power
+  const hasSelfSustain = allMoves.some(m => m.isSustain || m.isHeal || m.isShield);
+  if (hasSelfSustain) durability += 0.5;
+  if (uniteMove.isHeal || uniteMove.isShield) durability += 0.3;
   durability = clamp(durability);
 
   // ── Crowd Control (0-10) ────────────────────────────────────────────────
-  // Derived from the CC_MOVE_MAP: each mapped move contributes its quality ×
-  // CC type weight × duration multiplier. For unmapped moves, a flat weight
-  // is applied if the move has a ccType flag. Longer & harder CC = higher score.
+  // Each CC move is looked up in CC_MOVE_MAP for type, duration, and quality.
+  // Hard CC (stun, suppress, sleep, freeze) scores far higher than soft CC (slow).
+  // Unite moves are now included since they often carry powerful CC.
   let crowdControl = 0;
-  const seenMoveIds = new Set<string>(); // count each move once (base + upgrade share id)
-  for (const m of allMoves) {
+  const seenMoveIds = new Set<string>();
+
+  const ccMoves: Array<{ moveId: string; ccType?: string }> = [
+    ...allMoves.map(m => ({ moveId: m.moveId, ccType: m.ccType })),
+    { moveId: uniteMove.moveId, ccType: uniteMove.ccType },
+  ];
+
+  for (const m of ccMoves) {
+    if (!m.ccType && !CC_MOVE_MAP[m.moveId]) continue;
     if (seenMoveIds.has(m.moveId)) continue;
     seenMoveIds.add(m.moveId);
+
     const entry = CC_MOVE_MAP[m.moveId];
     if (entry) {
-      // Scale by duration: cap at 3s so extreme values don't dominate
       const durationFactor = Math.min(entry.duration, 3) / 3;
       crowdControl += entry.quality * CC_TYPE_WEIGHTS[entry.ccType] * durationFactor * 4;
     } else if (m.ccType) {
-      crowdControl += CC_TYPE_WEIGHTS[m.ccType] * 2.0;
+      crowdControl += CC_TYPE_WEIGHTS[m.ccType as keyof typeof CC_TYPE_WEIGHTS] * 2.0;
     }
   }
   crowdControl = clamp(crowdControl);
 
   // ── Mobility (0-10) ─────────────────────────────────────────────────────
-  // Mobility rating from pvpoke captures map presence & chase potential.
-  // Dash moves (+1.5 each, capped at 2 moves) and dash unite moves add bonuses.
-  // Speedster role gets an inherent +1 to reflect passive movement speed.
+  // pvpoke mobility rating + dash move bonuses + speedster class bonus.
   let mobility = (ratings.mobility / 5) * 10;
   const dashMoves = allMoves.filter(m => m.isDash);
   mobility += Math.min(2, dashMoves.length) * 1.5;
-  if (uniteMove.isDash) mobility += 1;
-  if (role === 'speedster') mobility += 1;
+  if (uniteMove.isDash) mobility += 1.0;
+  if (role === 'speedster') mobility += 1.0;
   mobility = clamp(mobility);
 
   // ── Healing (0-10) ──────────────────────────────────────────────────────
-  // Measures HP recovery the Pokemon can provide to itself or teammates.
-  // Derived from: number of heal moves (isHeal) × weight, role bonus for
-  // Supporters (who specialize in recovery), and the support stat rating.
-  // High healing enables extended fights and sustain-focused strategies.
+  // HP recovery for self or teammates. Each heal move is significant.
+  // Supporter role bonus reflects their identity as primary healers.
   let healing = 0;
   const healMoves = allMoves.filter(m => m.isHeal);
-  healing += healMoves.length * 3.0; // each heal move is significant
-  if (role === 'supporter') healing += 2.5; // supporters heal as part of identity
-  if (role === 'defender')  healing += 0.5; // some defenders have minor heals
-  healing += (ratings.support / 5) * 1.5;  // support rating proxy for team utility
+  healing += healMoves.length * 3.0;
+  if (uniteMove.isHeal) healing += 2.0; // unite heals are very powerful
+  if (role === 'supporter') healing += 2.5;
+  if (role === 'defender')  healing += 0.5;
+  healing += (ratings.support / 5) * 1.5;
   healing = clamp(healing);
 
   // ── Shielding (0-10) ────────────────────────────────────────────────────
-  // Measures damage absorption capacity via shield moves.
-  // Shields absorb incoming damage before HP is affected. Higher shielding
-  // means the team can survive burst damage windows.
+  // Damage absorption via shields. Shields counter burst damage.
   let shielding = 0;
   const shieldMoves = allMoves.filter(m => m.isShield);
-  shielding += shieldMoves.length * 3.5; // shields are strong defensive tools
-  if (role === 'defender')  shielding += 2.5; // defenders specialize in soaking damage
-  if (role === 'supporter') shielding += 1.0; // some supporters provide shields
-  shielding += (ratings.endurance / 5) * 1.0; // higher endurance = more robust shielding
+  shielding += shieldMoves.length * 3.5;
+  if (uniteMove.isShield) shielding += 2.5; // unite shields are very powerful
+  if (role === 'defender')  shielding += 2.5;
+  if (role === 'supporter') shielding += 1.0;
+  shielding += (ratings.endurance / 5) * 1.0;
   shielding = clamp(shielding);
 
+  // ── Team Fight (0-10) ───────────────────────────────────────────────────
+  // Effectiveness in 5v5 team fights. AoE moves hit multiple targets at once,
+  // AoE CC locks down the whole enemy team, and AoE unite moves can flip fights.
+  // Defenders and Supporters contribute by anchoring team fights.
+  let teamFight = 0;
+  const aoeMoves = allMoves.filter(m => m.isAoE);
+  teamFight += aoeMoves.length * 2.0;
+  // AoE moves with CC are especially powerful in team fights
+  const aoeCCMoves = allMoves.filter(m => m.isAoE && m.ccType);
+  teamFight += aoeCCMoves.length * 1.5;
+  // AoE unite move is the single biggest team-fight contribution
+  if (uniteMove.isAoE) teamFight += 3.5;
+  // AoE unite with CC (e.g. Blastoise hydro_typhoon = knockup AoE)
+  if (uniteMove.isAoE && uniteMove.ccType) teamFight += 1.0;
+  // Role bonuses — defenders and supporters anchor team fights
+  if (role === 'defender'   || role === 'supporter') teamFight += 2.0;
+  if (role === 'all-rounder') teamFight += 1.0;
+  // Rating blend: support+endurance = team fight presence
+  teamFight += ((ratings.support + ratings.endurance) / 2 / 5) * 1.5;
+  teamFight = clamp(teamFight);
+
+  // ── Engage / Pick Potential (0-10) ──────────────────────────────────────
+  // Ability to initiate fights advantageously: gap-closing dashes combined
+  // with hard CC to lock down a target or dive the enemy backline.
+  // This captures the "who starts the fight" competitive dimension.
+  let engage = 0;
+  // Dash + CC combo (best engage tool — gap-close AND immediate lockdown)
+  const engageMoves = allMoves.filter(m => m.isDash && m.ccType);
+  engage += engageMoves.length * 3.5;
+  // Hard CC from range (stun/suppress/sleep/freeze/root — powerful even without dash)
+  const hardCCNoSmash = allMoves.filter(m =>
+    m.ccType && ['stun', 'suppress', 'sleep', 'freeze', 'root'].includes(m.ccType) && !m.isDash
+  );
+  engage += hardCCNoSmash.length * 1.5;
+  // Pure dash without CC still provides gap-close
+  const dashNoCCMoves = allMoves.filter(m => m.isDash && !m.ccType);
+  engage += dashNoCCMoves.length * 0.5;
+  // Unite move engage: dash+CC unite = massive initiation
+  if (uniteMove.isDash && uniteMove.ccType) engage += 3.0;
+  else if (uniteMove.ccType === 'suppress' || uniteMove.ccType === 'stun') engage += 2.5;
+  else if (uniteMove.isDash) engage += 1.0;
+  else if (uniteMove.ccType) engage += 1.0;
+  // Role bonuses: speedsters are natural assassins, all-rounders are divers
+  if (role === 'speedster')   engage += 2.0;
+  if (role === 'all-rounder') engage += 1.0;
+  // Mobility rating contributes to engage potential
+  engage += (ratings.mobility / 5) * 1.0;
+  engage = clamp(engage);
+
   // ── Objective Threat (0-10) ─────────────────────────────────────────────
-  // Measures ability to contest and secure Dreadnaw, Zapdos, and Score zones.
-  // Scoring rating is the primary factor; All-rounders and Speedsters naturally
-  // excel at objectives. AoE unite moves help burst down objectives quickly.
+  // Ability to contest and secure Zapdos, Dreadnaw, and score points.
   let objectiveThreat = (ratings.scoring / 5) * 10;
   if (role === 'all-rounder' || role === 'speedster') objectiveThreat += 1;
-  if (uniteMove.isAoE) objectiveThreat += 0.5;
+  if (uniteMove.isAoE) objectiveThreat += 0.5; // AoE unite for objective bursting
   objectiveThreat = clamp(objectiveThreat);
 
   // ── Early Game (0-10) ───────────────────────────────────────────────────
-  // The leveling rating from pvpoke directly encodes how well a Pokemon
-  // performs in the early laning phase — farming speed, level advantage,
-  // and pre-evolution power. This is the most direct game data available.
   const earlyGame = clamp((ratings.leveling / 5) * 10);
 
   // ── Late Game (0-10) ────────────────────────────────────────────────────
-  // Blend of offense + endurance ratings at max level, plus bonuses for
-  // having upgraded moves (post-level-11 power spikes) and AoE unite moves
-  // that are most impactful in the final Zapdos fight.
   let lateGame = ((ratings.offense + ratings.endurance) / 2 / 5) * 10;
   const hasUpgradedMove = allMoves.some(m => m.isUpgrade);
   if (hasUpgradedMove) lateGame += 0.5;
@@ -183,6 +219,8 @@ export function computeDimensionScores(input: ScoringInput): DimensionScores {
     mobility,
     healing,
     shielding,
+    teamFight,
+    engage,
     objectiveThreat,
     earlyGame,
     lateGame,
@@ -190,16 +228,18 @@ export function computeDimensionScores(input: ScoringInput): DimensionScores {
 }
 
 export function computeCompositeScore(dimensionScores: DimensionScores): number {
-  const { damageOutput, durability, crowdControl, mobility, healing, shielding, objectiveThreat, earlyGame, lateGame } = dimensionScores;
+  const { damageOutput, durability, crowdControl, mobility, healing, shielding, teamFight, engage, objectiveThreat, earlyGame, lateGame } = dimensionScores;
   return (
-    damageOutput    * 0.16 +
-    durability      * 0.13 +
-    crowdControl    * 0.13 +
-    mobility        * 0.09 +
-    healing         * 0.09 +
-    shielding       * 0.09 +
-    objectiveThreat * 0.11 +
-    earlyGame       * 0.10 +
-    lateGame        * 0.10
+    damageOutput    * 0.14 +
+    durability      * 0.12 +
+    crowdControl    * 0.11 +
+    mobility        * 0.08 +
+    healing         * 0.08 +
+    shielding       * 0.08 +
+    teamFight       * 0.08 +
+    engage          * 0.07 +
+    objectiveThreat * 0.09 +
+    earlyGame       * 0.08 +
+    lateGame        * 0.07
   ) * 10; // scale to 0-100
 }
