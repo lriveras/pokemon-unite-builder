@@ -55,7 +55,7 @@ export function PokemonDetailModal({ pokemon, onClose }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <TeamRadarChart scores={pokemon.dimensionScores} size={240} />
           <div className="space-y-1.5">
-            {(['damageOutput', 'durability', 'crowdControl', 'mobility', 'sustain', 'objectiveThreat', 'earlyGame', 'lateGame'] as const).map(key => (
+            {(['damageOutput', 'durability', 'crowdControl', 'mobility', 'healing', 'shielding', 'objectiveThreat', 'earlyGame', 'lateGame'] as const).map(key => (
               <ScoreBar key={key} label={key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase())} score={pokemon.dimensionScores[key]} />
             ))}
           </div>

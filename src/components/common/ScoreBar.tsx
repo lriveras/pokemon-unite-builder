@@ -8,8 +8,9 @@ interface Props {
 }
 
 export function ScoreBar({ label, score, maxScore = 10, showValue = true }: Props) {
-  const pct = Math.min(100, (score / maxScore) * 100);
-  const color = getScoreColor(score);
+  const safeScore = score ?? 0;
+  const pct = Math.min(100, (safeScore / maxScore) * 100);
+  const color = getScoreColor(safeScore);
 
   return (
     <div className="flex items-center gap-2">
@@ -22,7 +23,7 @@ export function ScoreBar({ label, score, maxScore = 10, showValue = true }: Prop
       </div>
       {showValue && (
         <span className="w-8 text-right text-xs font-mono font-semibold" style={{ color }}>
-          {score.toFixed(1)}
+          {safeScore.toFixed(1)}
         </span>
       )}
     </div>

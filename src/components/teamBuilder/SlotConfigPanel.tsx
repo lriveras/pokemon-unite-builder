@@ -8,11 +8,12 @@ import { TierBadge } from '../common/TierBadge';
 import { ScoreBar } from '../common/ScoreBar';
 
 const DIMENSION_LABELS = [
-  { key: 'damageOutput', label: 'Damage' },
-  { key: 'durability', label: 'Durability' },
-  { key: 'crowdControl', label: 'CC' },
-  { key: 'mobility', label: 'Mobility' },
-  { key: 'sustain', label: 'Sustain' },
+  { key: 'damageOutput',    label: 'Damage' },
+  { key: 'durability',      label: 'Durability' },
+  { key: 'crowdControl',    label: 'Crowd Control' },
+  { key: 'mobility',        label: 'Mobility' },
+  { key: 'healing',         label: 'Healing' },
+  { key: 'shielding',       label: 'Shielding' },
   { key: 'objectiveThreat', label: 'Objective' },
 ] as const;
 

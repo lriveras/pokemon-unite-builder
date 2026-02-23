@@ -133,6 +133,13 @@ export const useTeamStore = create<TeamStore>()(
     }),
     {
       name: 'unite-team',
+      version: 2,
+      // Version 2: DimensionScores replaced 'sustain' with 'healing' + 'shielding'.
+      // Reset persisted state so stale Pokemon objects don't cause runtime errors.
+      migrate: () => ({
+        slots: [defaultSlot(0), defaultSlot(1), defaultSlot(2), defaultSlot(3), defaultSlot(4)],
+        activeSlotIndex: 0,
+      }),
       partialize: (state) => ({ slots: state.slots }),
     }
   )

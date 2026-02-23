@@ -9,14 +9,15 @@ interface Props {
 }
 
 const DIMENSION_LABELS: Record<keyof DimensionScores, string> = {
-  damageOutput: 'Damage',
-  durability: 'Durability',
-  crowdControl: 'CC',
-  mobility: 'Mobility',
-  sustain: 'Sustain',
+  damageOutput:    'Damage',
+  durability:      'Durability',
+  crowdControl:    'Crowd Ctrl',
+  mobility:        'Mobility',
+  healing:         'Healing',
+  shielding:       'Shielding',
   objectiveThreat: 'Objective',
-  earlyGame: 'Early',
-  lateGame: 'Late',
+  earlyGame:       'Early',
+  lateGame:        'Late',
 };
 
 export function TeamRadarChart({ scores, compareScores, size = 280 }: Props) {

@@ -64,7 +64,8 @@ export interface DimensionScores {
   durability: number;
   crowdControl: number;
   mobility: number;
-  sustain: number;
+  healing: number;
+  shielding: number;
   objectiveThreat: number;
   earlyGame: number;
   lateGame: number;

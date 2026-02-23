@@ -3,28 +3,30 @@ import { TeamEvaluation, SynergyFlag, PowerCurvePoint } from '../types/evaluatio
 import { evaluateSynergies } from './synergyEngine';
 import { DIMENSION_WEIGHTS, SYNERGY_BONUSES, getTierFromScore } from '../constants/evaluation';
 
+const ZERO_DIMENSIONS: DimensionScores = { damageOutput: 0, durability: 0, crowdControl: 0, mobility: 0, healing: 0, shielding: 0, objectiveThreat: 0, earlyGame: 0, lateGame: 0 };
+const DIMENSION_KEYS = Object.keys(ZERO_DIMENSIONS) as (keyof DimensionScores)[];
+
 function avgDimensions(pokemon: Pokemon[]): DimensionScores {
-  if (pokemon.length === 0) {
-    return { damageOutput: 0, durability: 0, crowdControl: 0, mobility: 0, sustain: 0, objectiveThreat: 0, earlyGame: 0, lateGame: 0 };
-  }
-  const keys = Object.keys(pokemon[0].dimensionScores) as (keyof DimensionScores)[];
-  const avg = {} as DimensionScores;
-  for (const k of keys) {
-    avg[k] = pokemon.reduce((sum, p) => sum + p.dimensionScores[k], 0) / pokemon.length;
+  if (pokemon.length === 0) return { ...ZERO_DIMENSIONS };
+  const avg = { ...ZERO_DIMENSIONS };
+  for (const k of DIMENSION_KEYS) {
+    // Use ?? 0 to guard against stale persisted data missing new dimension keys
+    avg[k] = pokemon.reduce((sum, p) => sum + (p.dimensionScores[k] ?? 0), 0) / pokemon.length;
   }
   return avg;
 }
 
 function computeCompositeScore(dims: DimensionScores, flags: SynergyFlag[]): number {
   let score = 0;
-  score += dims.damageOutput * DIMENSION_WEIGHTS.damageOutput * 10;
-  score += dims.durability * DIMENSION_WEIGHTS.durability * 10;
-  score += dims.crowdControl * DIMENSION_WEIGHTS.crowdControl * 10;
-  score += dims.mobility * DIMENSION_WEIGHTS.mobility * 10;
-  score += dims.sustain * DIMENSION_WEIGHTS.sustain * 10;
+  score += dims.damageOutput    * DIMENSION_WEIGHTS.damageOutput    * 10;
+  score += dims.durability      * DIMENSION_WEIGHTS.durability      * 10;
+  score += dims.crowdControl    * DIMENSION_WEIGHTS.crowdControl    * 10;
+  score += dims.mobility        * DIMENSION_WEIGHTS.mobility        * 10;
+  score += dims.healing         * DIMENSION_WEIGHTS.healing         * 10;
+  score += dims.shielding       * DIMENSION_WEIGHTS.shielding       * 10;
   score += dims.objectiveThreat * DIMENSION_WEIGHTS.objectiveThreat * 10;
-  score += dims.earlyGame * DIMENSION_WEIGHTS.earlyGame * 10;
-  score += dims.lateGame * DIMENSION_WEIGHTS.lateGame * 10;
+  score += dims.earlyGame       * DIMENSION_WEIGHTS.earlyGame       * 10;
+  score += dims.lateGame        * DIMENSION_WEIGHTS.lateGame        * 10;
 
   for (const flag of flags) {
     score += SYNERGY_BONUSES[flag.severity];
@@ -37,9 +39,10 @@ function generateStrengths(dims: DimensionScores, flags: SynergyFlag[]): string[
   const strengths: string[] = [];
   if (dims.damageOutput >= 7) strengths.push('Exceptional damage output that can burst enemies quickly');
   if (dims.durability >= 7) strengths.push('High durability allows sustained fighting and frontlining');
-  if (dims.crowdControl >= 7) strengths.push('Strong CC lockdown limits enemy options in team fights');
+  if (dims.crowdControl >= 7) strengths.push('Strong Crowd Control lockdown limits enemy options in team fights');
   if (dims.mobility >= 7) strengths.push('High mobility enables excellent rotation and pick potential');
-  if (dims.sustain >= 7) strengths.push('Self-sustain or healing allows extended combat presence');
+  if (dims.healing >= 7) strengths.push('Abundant healing keeps the team healthy through prolonged fights');
+  if (dims.shielding >= 7) strengths.push('Strong shielding absorbs burst damage and protects carries');
   if (dims.objectiveThreat >= 7) strengths.push('Strong objective threat secures Zapdos and Dreadnaw consistently');
   if (dims.earlyGame >= 7) strengths.push('Dominates early game, enabling snowball through objectives');
   if (dims.lateGame >= 7) strengths.push('Scales extremely well into the late game and Zapdos fights');
@@ -51,8 +54,9 @@ function generateWeaknesses(dims: DimensionScores, flags: SynergyFlag[]): string
   const weaknesses: string[] = [];
   if (dims.damageOutput < 4) weaknesses.push('Low damage output — struggles to burst enemies or apply pressure');
   if (dims.durability < 4) weaknesses.push('Fragile composition — vulnerable to dive and assassination');
-  if (dims.crowdControl < 4) weaknesses.push('Lack of CC makes it difficult to control team fights');
+  if (dims.crowdControl < 4) weaknesses.push('Lack of Crowd Control makes it difficult to control team fights');
   if (dims.mobility < 4) weaknesses.push('Low mobility — easily kited and struggles to cover map');
+  if (dims.healing < 3 && dims.shielding < 3) weaknesses.push('No healing or shielding — team has no recovery during fights');
   if (dims.objectiveThreat < 4) weaknesses.push('Weak objective play — may lose Dreadnaw and Zapdos contests');
   if (dims.earlyGame < 4) weaknesses.push('Slow early game — vulnerable to early objective loss');
   flags.filter(f => f.severity === 'critical').forEach(f => weaknesses.push(f.description.split('.')[0]));
@@ -67,7 +71,7 @@ function generateCoachingTips(dims: DimensionScores, flags: SynergyFlag[], compo
     tips.push('Add a Defender or Supporter to protect your damage dealers and increase survivability');
   }
   if (flags.some(f => f.id === 'no_cc')) {
-    tips.push('Add a Pokemon with CC moves (stun, sleep, root) to control enemy movement in team fights');
+    tips.push('Add a Pokémon with Crowd Control moves (stun, sleep, root) to control enemy movement in team fights');
   }
   if (flags.some(f => f.id === 'double_carry')) {
     tips.push('Replace one Attacker with a Defender or All-Rounder to improve team durability');

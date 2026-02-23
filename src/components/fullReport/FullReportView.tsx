@@ -10,16 +10,27 @@ import { RoleBadge } from '../common/RoleBadge';
 import { TierBadge } from '../common/TierBadge';
 import { ScoreBar } from '../common/ScoreBar';
 import { Link } from 'react-router-dom';
+import { DIMENSION_GLOSSARY_LIST } from '../../data/teamCompGlossary';
+
+const CATEGORY_ORDER = ['offense', 'defense', 'support', 'utility', 'timing'] as const;
+const CATEGORY_LABELS: Record<string, string> = {
+  offense: 'Offense',
+  defense: 'Defense',
+  support: 'Support',
+  utility: 'Utility',
+  timing:  'Timing',
+};
 
 const DIMENSION_LABELS = [
-  { key: 'damageOutput', label: 'Damage' },
-  { key: 'durability', label: 'Durability' },
-  { key: 'crowdControl', label: 'CC' },
-  { key: 'mobility', label: 'Mobility' },
-  { key: 'sustain', label: 'Sustain' },
+  { key: 'damageOutput',    label: 'Damage' },
+  { key: 'durability',      label: 'Durability' },
+  { key: 'crowdControl',    label: 'Crowd Control' },
+  { key: 'mobility',        label: 'Mobility' },
+  { key: 'healing',         label: 'Healing' },
+  { key: 'shielding',       label: 'Shielding' },
   { key: 'objectiveThreat', label: 'Objective' },
-  { key: 'earlyGame', label: 'Early Game' },
-  { key: 'lateGame', label: 'Late Game' },
+  { key: 'earlyGame',       label: 'Early Game' },
+  { key: 'lateGame',        label: 'Late Game' },
 ] as const;
 
 export function FullReportView() {
@@ -159,6 +170,57 @@ export function FullReportView() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Team Comp Glossary */}
+          <div className="bg-[#16213e] border border-[#0f3460] rounded-xl p-6">
+            <h2 className="text-base font-bold text-slate-200 mb-1">Team Composition Guide</h2>
+            <p className="text-xs text-slate-500 mb-5">
+              How each scoring dimension is calculated and what it means for your strategy.
+              All scores are derived from real game data — stats, move flags, and Crowd Control durations.
+            </p>
+            {CATEGORY_ORDER.map(cat => {
+              const entries = DIMENSION_GLOSSARY_LIST.filter(d => d.category === cat);
+              if (entries.length === 0) return null;
+              return (
+                <div key={cat} className="mb-6 last:mb-0">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-[#1e3a6e] pb-1">
+                    {CATEGORY_LABELS[cat]}
+                  </h3>
+                  <div className="space-y-4">
+                    {entries.map(def => (
+                      <div key={def.id} className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-3">
+                        {/* Label + badge */}
+                        <div className="flex flex-col gap-1.5">
+                          <span className={`self-start inline-block px-2 py-0.5 rounded-full border text-xs font-semibold ${def.color}`}>
+                            {def.label}
+                          </span>
+                          <p className="text-xs text-slate-500 leading-relaxed">{def.shortDescription}</p>
+                        </div>
+                        {/* Details */}
+                        <div className="space-y-2">
+                          <p className="text-xs text-slate-300 leading-relaxed">{def.fullDescription}</p>
+                          <div className="flex flex-col sm:flex-row gap-2 text-xs">
+                            <div className="flex-1 bg-[#0d1b35] border border-green-900/40 rounded-lg p-2">
+                              <span className="text-green-400 font-semibold">High score: </span>
+                              <span className="text-slate-400">{def.highMeaning}</span>
+                            </div>
+                            <div className="flex-1 bg-[#0d1b35] border border-red-900/40 rounded-lg p-2">
+                              <span className="text-red-400 font-semibold">Low score: </span>
+                              <span className="text-slate-400">{def.lowMeaning}</span>
+                            </div>
+                          </div>
+                          <div className="text-xs bg-[#0d1b35] border border-[#1e3a6e] rounded-lg px-2 py-1.5">
+                            <span className="text-slate-500 font-medium">Data source: </span>
+                            <span className="text-slate-600">{def.dataSource}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </>
       )}

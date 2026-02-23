@@ -26,8 +26,8 @@ export function evaluateSynergies(slots: (Pokemon | null)[]): SynergyFlag[] {
   if (ccCount >= 2 && ccTypes.size >= 2) {
     flags.push({
       id: 'cc_chain',
-      label: 'CC Chain',
-      description: `Your team has ${ccCount} Pokemon with different CC types (${Array.from(ccTypes).join(', ')}), enabling CC chains that keep enemies locked down.`,
+      label: 'Crowd Control Chain',
+      description: `Your team has ${ccCount} Pokémon with different Crowd Control types (${Array.from(ccTypes).join(', ')}), enabling chains that keep enemies locked down for extended periods.`,
       severity: 'positive',
     });
   }
@@ -71,13 +71,13 @@ export function evaluateSynergies(slots: (Pokemon | null)[]): SynergyFlag[] {
     });
   }
 
-  // No CC: avg CC score < 3
+  // No Crowd Control: avg CC score < 3
   const avgCC = pokemon.reduce((sum, p) => sum + p.dimensionScores.crowdControl, 0) / pokemon.length;
   if (avgCC < 3) {
     flags.push({
       id: 'no_cc',
       label: 'No Crowd Control',
-      description: 'Your team lacks meaningful CC. Enemy Pokemon can act freely, reducing your team fight potential.',
+      description: 'Your team lacks meaningful Crowd Control. Enemy Pokémon can act freely in team fights, reducing your ability to land follow-up damage.',
       severity: 'critical',
     });
   }

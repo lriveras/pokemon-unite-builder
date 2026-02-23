@@ -37,6 +37,11 @@ export const useSavedCompsStore = create<SavedCompsStore>()(
 
       getComposition: (id) => get().compositions.find(c => c.id === id),
     }),
-    { name: 'unite-saved-comps' }
+    {
+      name: 'unite-saved-comps',
+      version: 2,
+      // Version 2: clear comps that contain Pokemon with stale 'sustain' dimension field.
+      migrate: () => ({ compositions: [] }),
+    }
   )
 );

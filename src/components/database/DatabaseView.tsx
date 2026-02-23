@@ -70,7 +70,7 @@ export function DatabaseView() {
     }),
     columnHelper.accessor(row => row.dimensionScores.crowdControl, {
       id: 'cc',
-      header: 'CC',
+      header: 'Crowd Ctrl',
       cell: info => <Score value={info.getValue()} />,
     }),
     columnHelper.accessor(row => row.dimensionScores.mobility, {

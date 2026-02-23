@@ -4,14 +4,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { getScoreColor } from '../../constants/evaluation';
 
 const LABELS: Record<keyof DimensionScores, string> = {
-  damageOutput: 'Damage Output',
-  durability: 'Durability',
-  crowdControl: 'Crowd Control',
-  mobility: 'Mobility',
-  sustain: 'Sustain',
+  damageOutput:    'Damage Output',
+  durability:      'Durability',
+  crowdControl:    'Crowd Control',
+  mobility:        'Mobility',
+  healing:         'Healing',
+  shielding:       'Shielding',
   objectiveThreat: 'Objective Threat',
-  earlyGame: 'Early Game',
-  lateGame: 'Late Game',
+  earlyGame:       'Early Game',
+  lateGame:        'Late Game',
 };
 
 interface Props {
@@ -26,7 +27,7 @@ export function DimensionBreakdown({ scores }: Props) {
 
   return (
     <div className="space-y-4">
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} layout="vertical" margin={{ top: 0, right: 20, bottom: 0, left: 90 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" horizontal={false} />
           <XAxis type="number" domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 11 }} />
