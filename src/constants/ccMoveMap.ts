@@ -39,6 +39,7 @@ export const CC_MOVE_MAP: Record<string, CCMoveEntry> = {
   scald:        { ccType: 'slow',     duration: 1.5, quality: 0.5 },
   telekinesis:  { ccType: 'suppress', duration: 2.5, quality: 0.95 },
   surf_slowbro: { ccType: 'slow',     duration: 1.0, quality: 0.5 },
+  slowbeam:     { ccType: 'root',     duration: 2.5, quality: 0.8 }, // leaves them unable to move
 
   // ── Wigglytuff ────────────────────────────────────────────────────────
   sing:         { ccType: 'sleep',   duration: 3.0, quality: 0.85 },
@@ -96,8 +97,9 @@ export const CC_MOVE_MAP: Record<string, CCMoveEntry> = {
   moonlight:  { ccType: 'slow', duration: 1.0, quality: 0.4 },
 
   // ── Eldegoss ──────────────────────────────────────────────────────────
-  cotton_guard: { ccType: 'slow', duration: 1.0, quality: 0.4 },
-  leaf_tornado: { ccType: 'slow', duration: 1.5, quality: 0.5 },
+  cotton_guard:  { ccType: 'slow',    duration: 1.0, quality: 0.4 },
+  cotton_spore:  { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // launching them + slow
+  leaf_tornado:  { ccType: 'slow',    duration: 1.5, quality: 0.5 },
 
   // ── Lapras ────────────────────────────────────────────────────────────
   perish_song:  { ccType: 'suppress', duration: 2.5, quality: 0.85 }, // countdown to forced incapacitation
@@ -187,9 +189,11 @@ export const CC_MOVE_MAP: Record<string, CCMoveEntry> = {
   shadow_sneak_mimikyu:  { ccType: 'slow', duration: 1.0, quality: 0.4 },
 
   // ── Dhelmise ──────────────────────────────────────────────────────────
-  anchor_shot:       { ccType: 'root',    duration: 2.0, quality: 0.8 },
+  anchor_shot:         { ccType: 'root',    duration: 2.0, quality: 0.8 },
   heavy_slam_dhelmise: { ccType: 'knockup', duration: 0.5, quality: 0.75 },
   whirlpool_dhelmise:  { ccType: 'root',    duration: 1.5, quality: 0.8 },
+  bulldoze_dhelmise:   { ccType: 'slow',    duration: 1.5, quality: 0.5 },
+  seaweed_snare:       { ccType: 'root',    duration: 2.0, quality: 0.8 },
 
   // ── Buzzwole ──────────────────────────────────────────────────────────
   lunge:      { ccType: 'slow',    duration: 1.5, quality: 0.5 },
@@ -231,13 +235,15 @@ export const CC_MOVE_MAP: Record<string, CCMoveEntry> = {
   hyper_beam: { ccType: 'stun',    duration: 1.0, quality: 1.0 }, // brief stun on hit
 
   // ── Empoleon ──────────────────────────────────────────────────────────
-  hydro_cannon: { ccType: 'knockup', duration: 0.5, quality: 0.75 },
+  hydro_cannon:    { ccType: 'knockup', duration: 0.5, quality: 0.75 },
+  sovereign_slide: { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // shoving enemies
   // whirlpool shared with Azumarill entry above
 
   // ── Suicune ───────────────────────────────────────────────────────────
-  whirlpool_suicune: { ccType: 'root', duration: 2.0, quality: 0.8 },
-  icy_wind:          { ccType: 'slow', duration: 2.0, quality: 0.5 },
-  avalanche:         { ccType: 'slow', duration: 1.0, quality: 0.4 },
+  whirlpool_suicune: { ccType: 'root',    duration: 2.0, quality: 0.8 },
+  surf_suicune:      { ccType: 'knockup', duration: 0.5, quality: 0.75 }, // throwing them
+  icy_wind:          { ccType: 'slow',    duration: 2.0, quality: 0.5 },
+  avalanche:         { ccType: 'slow',    duration: 1.0, quality: 0.4 },
 
   // ── Clefable ──────────────────────────────────────────────────────────
   gravity: { ccType: 'root', duration: 2.0, quality: 0.7 }, // prevents dash & slow fall

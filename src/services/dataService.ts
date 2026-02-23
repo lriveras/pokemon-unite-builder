@@ -4,6 +4,8 @@ import { DATA_URLS, getSpriteUrl } from '../constants/dataUrls';
 import { MEGA_POKEMON_IDS } from '../constants/moveDamageTable';
 import { CC_MOVE_MAP } from '../constants/ccMoveMap';
 import { HEAL_MOVE_IDS } from '../constants/healMoveIds';
+import { SHIELD_MOVE_IDS } from '../constants/shieldMoveIds';
+import { DASH_MOVE_IDS } from '../constants/dashMoveIds';
 import { computeDimensionScores } from '../engine/scoringEngine';
 import { FULL_POKEMON_ROSTER, PVPOKE_IDS } from '../data/pokemonRoster';
 import { MOVE_DESCRIPTIONS } from '../data/moveDescriptions';
@@ -49,8 +51,8 @@ function normalizeMoveOption(raw: RawPokemonMove, isUpgrade = false): MoveOption
     damageType: style.includes('special') ? 'sp_atk' : 'atk',
     isBurst: category.includes('burst'),
     isHeal: category.includes('recovery') || name.toLowerCase().includes('heal') || name.toLowerCase().includes('recover') || HEAL_MOVE_IDS.has(raw.moveId),
-    isShield: category.includes('shield') || name.toLowerCase().includes('shield'),
-    isDash: category.includes('dash') || name.toLowerCase().includes('dash') || name.toLowerCase().includes('rush'),
+    isShield: category.includes('shield') || name.toLowerCase().includes('shield') || SHIELD_MOVE_IDS.has(raw.moveId),
+    isDash: category.includes('dash') || name.toLowerCase().includes('dash') || name.toLowerCase().includes('rush') || DASH_MOVE_IDS.has(raw.moveId),
     isSustain: category.includes('drain') || category.includes('sustain'),
     ccType: ccEntry?.ccType,
     cooldown: raw.cooldown || 7,
@@ -71,7 +73,13 @@ function normalizeMoveSlot(rawMoves: RawPokemonMove[] | undefined): MoveSlot {
     normalizeMoveOption(baseMove, false),
     ...upgradedMoves.map(m => normalizeMoveOption(m, true)),
   ];
-  return { options, defaultChoice: options[0]?.moveId || '' };
+  // Default to the first upgrade option (the real move at max level).
+  // The base (level-1) move is a temporary pre-evolution placeholder.
+  const firstUpgrade = upgradedMoves[0];
+  const defaultChoice = firstUpgrade
+    ? normalizeMoveOption(firstUpgrade, true).moveId
+    : (options[0]?.moveId || '');
+  return { options, defaultChoice };
 }
 
 export function normalizePokemon(raw: RawPokemon, statsSource: Pokemon['statsSource'] = 'pvpoke'): Pokemon {

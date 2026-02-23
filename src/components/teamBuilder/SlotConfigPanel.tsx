@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { TeamSlot } from '../../types/team';
 import { useTeamStore } from '../../store/useTeamStore';
 import { MoveSelector } from './MoveSelector';
@@ -6,6 +7,8 @@ import { BattleItemSelector } from './BattleItemSelector';
 import { RoleBadge } from '../common/RoleBadge';
 import { TierBadge } from '../common/TierBadge';
 import { ScoreBar } from '../common/ScoreBar';
+import { computeDimensionScores } from '../../engine/scoringEngine';
+import { MoveOption, MoveSlot } from '../../types/pokemon';
 
 const DIMENSION_LABELS = [
   { key: 'damageOutput',    label: 'Damage' },
@@ -21,9 +24,33 @@ interface Props {
   slot: TeamSlot;
 }
 
+/** Builds a single-move slot from an explicit choice or the default upgrade. */
+function effectiveSlot(selected: MoveOption | null, pokSlot: MoveSlot): MoveSlot {
+  if (selected) return { options: [selected], defaultChoice: selected.moveId };
+  const def = pokSlot.options.find(o => o.moveId === pokSlot.defaultChoice)
+    ?? pokSlot.options.find(o => o.isUpgrade)
+    ?? pokSlot.options[0];
+  return { options: def ? [def] : [], defaultChoice: def?.moveId ?? '' };
+}
+
 export function SlotConfigPanel({ slot }: Props) {
   const { setSlot1Choice, setSlot2Choice, setHeldItem, setBattleItem, setItemGrade, setPokemonLevel } = useTeamStore();
   const pokemon = slot.pokemon;
+
+  // Re-compute dimension scores whenever the user changes move selections.
+  // This means picking Aqua Ring vs Flip Turn will show different healing/mobility scores.
+  const effectiveScores = useMemo(() => {
+    if (!pokemon) return null;
+    return computeDimensionScores({
+      ratings: pokemon.ratings,
+      role: pokemon.role,
+      attackStyle: pokemon.attackStyle,
+      slot1: effectiveSlot(slot.config.slot1Choice, pokemon.slot1),
+      slot2: effectiveSlot(slot.config.slot2Choice, pokemon.slot2),
+      uniteMove: pokemon.uniteMove,
+      normalizedStats: pokemon.statsProgression,
+    });
+  }, [pokemon, slot.config.slot1Choice, slot.config.slot2Choice]);
 
   if (!pokemon) {
     return (
@@ -123,7 +150,7 @@ export function SlotConfigPanel({ slot }: Props) {
         <label className="text-xs text-slate-500 block mb-2">Dimension Scores</label>
         <div className="space-y-1.5">
           {DIMENSION_LABELS.map(({ key, label }) => (
-            <ScoreBar key={key} label={label} score={pokemon.dimensionScores[key]} />
+            <ScoreBar key={key} label={label} score={(effectiveScores ?? pokemon.dimensionScores)[key]} />
           ))}
         </div>
       </div>

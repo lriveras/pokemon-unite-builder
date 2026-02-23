@@ -1,4 +1,4 @@
-import { PokemonRole, AttackStyle, DimensionScores, MoveSlot, UniteMove } from '../types/pokemon';
+import { PokemonRole, AttackStyle, DimensionScores, MoveSlot, MoveOption, UniteMove } from '../types/pokemon';
 import { CC_MOVE_MAP, CC_TYPE_WEIGHTS } from '../constants/ccMoveMap';
 
 interface ScoringInput {
@@ -22,9 +22,29 @@ function clamp(val: number, min = 0, max = 10): number {
   return Math.max(min, Math.min(max, val));
 }
 
+/**
+ * Returns the single "active" move for a slot — the one whose flags are
+ * used for scoring. Priority:
+ *   1. The option matching `slot.defaultChoice` (could be set to the
+ *      user's explicit pick or the first-upgrade default from normalization)
+ *   2. First upgrade option (isUpgrade = true)
+ *   3. First option of any kind
+ */
+function getActiveMove(slot: MoveSlot): MoveOption | undefined {
+  if (slot.options.length === 0) return undefined;
+  const byDefault = slot.options.find(o => o.moveId === slot.defaultChoice);
+  if (byDefault) return byDefault;
+  return slot.options.find(o => o.isUpgrade) ?? slot.options[0];
+}
+
 export function computeDimensionScores(input: ScoringInput): DimensionScores {
   const { ratings, role, attackStyle, slot1, slot2, uniteMove, normalizedStats } = input;
-  const allMoves = [...slot1.options, ...slot2.options];
+  // Score based on the *active* (selected/default) move per slot, not every option.
+  // This means a build that picks Flip Turn will NOT get a healing bonus,
+  // while one that picks Aqua Ring will.
+  const slot1Active = getActiveMove(slot1);
+  const slot2Active = getActiveMove(slot2);
+  const allMoves = [slot1Active, slot2Active].filter((m): m is MoveOption => !!m);
 
   // Use max-level stats (index 14 = level 15) for stat-based calculations
   const maxStats = normalizedStats.length > 0

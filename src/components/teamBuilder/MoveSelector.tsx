@@ -11,12 +11,17 @@ interface Props {
 export function MoveSelector({ slot, selected, onSelect, label }: Props) {
   if (slot.options.length === 0) return null;
 
-  if (slot.options.length === 1) {
+  // Show only the upgrade options when any exist — the base (level-1) move is a
+  // temporary pre-evolution placeholder and not a meaningful build choice.
+  const upgrades = slot.options.filter(o => o.isUpgrade);
+  const displayOptions = upgrades.length > 0 ? upgrades : slot.options;
+
+  if (displayOptions.length === 1) {
     return (
       <div>
         <label className="text-xs text-slate-500 block mb-1">{label}</label>
         <div className="px-3 py-2 rounded-lg bg-[#1a1a2e] border border-[#0f3460] text-sm text-slate-300">
-          {slot.options[0].name}
+          {displayOptions[0].name}
           <span className="ml-1 text-xs text-slate-500">(fixed)</span>
         </div>
       </div>
@@ -27,7 +32,7 @@ export function MoveSelector({ slot, selected, onSelect, label }: Props) {
     <div>
       <label className="text-xs text-slate-500 block mb-1">{label}</label>
       <div className="flex gap-1">
-        {slot.options.map(move => (
+        {displayOptions.map(move => (
           <button
             key={move.moveId}
             onClick={() => onSelect(move)}
