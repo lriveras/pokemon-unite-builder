@@ -3,6 +3,7 @@ import { HeldItem, BattleItem, RawHeldItem, RawBattleItem } from '../types/items
 import { DATA_URLS, getSpriteUrl } from '../constants/dataUrls';
 import { MEGA_POKEMON_IDS } from '../constants/moveDamageTable';
 import { CC_MOVE_MAP } from '../constants/ccMoveMap';
+import { HEAL_MOVE_IDS } from '../constants/healMoveIds';
 import { computeDimensionScores } from '../engine/scoringEngine';
 import { FULL_POKEMON_ROSTER, PVPOKE_IDS } from '../data/pokemonRoster';
 import { MOVE_DESCRIPTIONS } from '../data/moveDescriptions';
@@ -47,7 +48,7 @@ function normalizeMoveOption(raw: RawPokemonMove, isUpgrade = false): MoveOption
     description: MOVE_DESCRIPTIONS[raw.moveId] || '',
     damageType: style.includes('special') ? 'sp_atk' : 'atk',
     isBurst: category.includes('burst'),
-    isHeal: category.includes('recovery') || name.toLowerCase().includes('heal') || name.toLowerCase().includes('recover'),
+    isHeal: category.includes('recovery') || name.toLowerCase().includes('heal') || name.toLowerCase().includes('recover') || HEAL_MOVE_IDS.has(raw.moveId),
     isShield: category.includes('shield') || name.toLowerCase().includes('shield'),
     isDash: category.includes('dash') || name.toLowerCase().includes('dash') || name.toLowerCase().includes('rush'),
     isSustain: category.includes('drain') || category.includes('sustain'),
